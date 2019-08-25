@@ -125,6 +125,7 @@
 										%>
 										%if subs_languages is not None:
 										<button class="manual_search ui button" data-tooltip="Manually search for subtitles" data-inverted="" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{subs_languages_list}}" data-hi="{{details[4]}}" data-forced="{{details[15]}}" data-movie_title="{{details[0]}}" data-radarrId="{{details[10]}}"><i class="ui inverted large compact user icon"></i></button>
+										<button class="manual_upload ui button" data-tooltip="Manually upload subtitles" data-inverted="" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{subs_languages_list}}" data-hi="{{details[4]}}" data-movie_title="{{details[0]}}" data-radarrId="{{details[10]}}"><i class="ui inverted large compact cloud upload icon"></i></button>
 										%end
 										<button id="config" class="ui button" data-tooltip="Edit movie" data-inverted="" data-tmdbid="{{details[5]}}" data-title="{{details[0]}}" data-poster="{{details[2]}}" data-audio="{{details[6]}}" data-languages="{{!subs_languages_list}}" data-hearing-impaired="{{details[4]}}" data-forced="{{details[15]}}"><i class="ui inverted large compact configure icon"></i></button>
 									</div>
@@ -220,8 +221,10 @@
 						for missing_subs_language in missing_subs_languages:
 							if len(missing_subs_language) > 2:
 								forced = missing_subs_language[2]
+								forced_bool = True
 							else:
 								forced = False
+								forced_bool = False
 							end
 
 						    if details[14] is not None and settings.general.getboolean('adaptive_searching') and missing_subs_language in details[14]:
@@ -229,12 +232,12 @@
                                     if missing_subs_language in lang:
                                         if search_active(lang[1]):
 					%>
-							<a class="get_subtitle ui small blue label" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{alpha3_from_alpha2(str(missing_subs_language.split(':')[0]))}}" data-hi="{{details[4]}}" data-forced="{{details[15]}}" data-radarrId={{details[10]}}>
+							<a class="get_subtitle ui small blue label" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{alpha3_from_alpha2(str(missing_subs_language.split(':')[0]))}}" data-hi="{{details[4]}}" data-forced="{{forced_bool}}" data-radarrId={{details[10]}}>
 								{{language_from_alpha2(str(missing_subs_language.split(':')[0]))}}{{' forced' if forced else ''}}
 								<i style="margin-left:3px; margin-right:0" class="search icon"></i>
 							</a>
                                         %else:
-                            <a data-tooltip="Automatic searching delayed (adaptive search)" data-position="top left" data-inverted="" class="get_subtitle ui small red label" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{alpha3_from_alpha2(str(missing_subs_language.split(':')[0]))}}" data-hi="{{details[4]}}" data-forced="{{details[15]}}" data-radarrId={{details[10]}}>
+                            <a data-tooltip="Automatic searching delayed (adaptive search)" data-position="top left" data-inverted="" class="get_subtitle ui small red label" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{alpha3_from_alpha2(str(missing_subs_language.split(':')[0]))}}" data-hi="{{details[4]}}" data-forced="{{forced_bool}}" data-radarrId={{details[10]}}>
 								{{language_from_alpha2(str(missing_subs_language.split(':')[0]))}}{{' forced' if forced else ''}}
 								<i style="margin-left:3px; margin-right:0" class="search icon"></i>
 							</a>
@@ -244,7 +247,7 @@
                                 end
                             else:
                     %>
-                            <a class="get_subtitle ui small blue label" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{alpha3_from_alpha2(str(missing_subs_language.split(':')[0]))}}" data-hi="{{details[4]}}" data-forced="{{details[15]}}" data-radarrId={{details[10]}}>
+                            <a class="get_subtitle ui small blue label" data-moviePath="{{details[8]}}" data-scenename="{{details[12]}}" data-language="{{alpha3_from_alpha2(str(missing_subs_language.split(':')[0]))}}" data-hi="{{details[4]}}" data-forced="{{forced_bool}}" data-radarrId={{details[10]}}>
 								{{language_from_alpha2(str(missing_subs_language.split(':')[0]))}}{{' forced' if forced else ''}}
 								<i style="margin-left:3px; margin-right:0" class="search icon"></i>
 							</a>
@@ -352,6 +355,58 @@
 			</div>
 		</div>
 
+		<div class="upload_dialog ui small modal">
+			<i class="close icon"></i>
+			<div class="header">
+				<span id="movie_title_upload_span"></span>
+			</div>
+			<div class="scrolling content">
+				<form class="ui form" name="upload_form" id="upload_form" action="{{base_url}}manual_upload_subtitle_movie" method="post" enctype="multipart/form-data">
+					<div class="ui grid">
+						<div class="middle aligned row">
+							<div class="right aligned three wide column">
+								<label>Language</label>
+							</div>
+							<div class="thirteen wide column">
+								<select class="ui search dropdown" id="language" name="language">
+									%for language in subs_languages_list:
+									<option value="{{language}}">{{language_from_alpha2(language)}}</option>
+									%end
+								</select>
+							</div>
+						</div>
+						<div class="middle aligned row">
+							<div class="right aligned three wide column">
+								<label>Forced</label>
+							</div>
+							<div class="thirteen wide column">
+								<div class="ui toggle checkbox">
+									<input name="forced" type="checkbox" value="1">
+									<label></label>
+								</div>
+							</div>
+						</div>
+						<div class="middle aligned row">
+							<div class="right aligned three wide column">
+								<label>File</label>
+							</div>
+							<div class="thirteen wide column">
+								<input type="file" name="upload">
+							</div>
+						</div>
+					</div>
+					<input type="hidden" id="upload_moviePath" name="moviePath" value="" />
+					<input type="hidden" id="upload_sceneName" name="sceneName" value="" />
+					<input type="hidden" id="upload_radarrId" name="radarrId" value="" />
+					<input type="hidden" id="upload_title" name="title" value="" />
+				</form>
+			</div>
+			<div class="actions">
+				<button class="ui cancel button" >Cancel</button>
+				<button type="submit" name="save" value="save" form="upload_form" class="ui blue approve button">Save</button>
+			</div>
+		</div>
+
 		% include('footer.tpl')
 	</body>
 </html>
@@ -423,14 +478,9 @@
 		});
 	});
 
-	$('a, .menu .item, button:not(#config, .cancel, .manual_search, #search_missing_subtitles_movie)').on('click', function(){
+	$('a, .menu .item, button:not(#config, .cancel, .manual_search, .manual_upload, #search_missing_subtitles_movie)').on('click', function(){
 		$('#loader').addClass('active');
 	});
-
-	$('.modal')
-		.modal({
-			autofocus: false
-		});
 
 	$('#config').on('click', function(){
 		$('#movie_form').attr('action', '{{base_url}}edit_movie/{{no}}');
@@ -453,7 +503,12 @@
 			$("#movie_hearing-impaired_div").checkbox('uncheck');
 		}
 
-		$('.config_dialog').modal('show');
+		$('.config_dialog')
+			.modal({
+				centered: false,
+				autofocus: false
+			})
+			.modal('show');
 	});
 
 	$('.manual_search').on('click', function(){
@@ -555,7 +610,33 @@
 
 		$('.search_dialog')
 			.modal({
-				centered: false
+				centered: false,
+				autofocus: false
+			})
+			.modal('show')
+		;
+	});
+
+	$('.manual_upload').on('click', function() {
+		$("#movie_title_upload_span").html($(this).data("movie_title"));
+
+		moviePath = $(this).attr("data-moviePath");
+		sceneName = $(this).attr("data-sceneName");
+		language = $(this).attr("data-language");
+		radarrId = $(this).attr("data-radarrId");
+		var title = "{{!details[0].replace("'", "\'")}}";
+
+		$('#language').dropdown();
+
+		$('#upload_moviePath').val(moviePath);
+		$('#upload_sceneName').val(sceneName);
+		$('#upload_radarrId').val(radarrId);
+		$('#upload_title').val(title);
+
+		$('.upload_dialog')
+			.modal({
+				centered: false,
+				autofocus: false
 			})
 			.modal('show')
 		;
